@@ -18,7 +18,7 @@ from telegram.ext import (
     MessageHandler,
     filters
 )
-
+from database import create_database
 
 # =========================
 # GLOBAL VARIABLES
@@ -734,6 +734,7 @@ async def button_handler(
 # =========================
 
 def main():
+    create_database()
 
     if not TOKEN:
 

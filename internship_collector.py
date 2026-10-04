@@ -21,6 +21,21 @@ def add_internship(
     connection = sqlite3.connect(DATABASE_NAME)
     cursor = connection.cursor()
 
+    # Check if internship already exists
+    cursor.execute("""
+        SELECT id
+        FROM internships
+        WHERE apply_url = ?
+    """, (apply_url,))
+
+    existing = cursor.fetchone()
+
+    if existing:
+        print("⚠️ Internship already exists. Skipping.")
+        connection.close()
+        return
+
+    # Add new internship
     cursor.execute("""
         INSERT INTO internships
         (

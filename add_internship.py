@@ -12,20 +12,20 @@ def add_internship():
     connection = sqlite3.connect(DATABASE_NAME)
     cursor = connection.cursor()
 
-    title = "Software Developer Intern"
-    company = "TALENTBRAINY"
-    location = "Pan India, Tamil Nadu"
-    stipend = "₹10,000/month"
+    title = "Business Development Intern"
+    company = "SKILL VEDANTH EDTECH SOLUTIONS PRIVATE LIMITED"
+    location = "Bengaluru, Karnataka"
+    stipend = "₹18,000/month"
     duration = "6 Months"
-    skills = "Full Stack Developer, Python, Java"
-    deadline = "25 Oct 2026"
-    apply_url = "https://internship.aicte-india.org/internships/1-INTERNSHIP_17910209776ac0cfb158fec"
+    skills = "Business Development,Communication"
+    deadline = "30 Oct 2026"
+    apply_url = "https://internship.aicte-india.org/internships/1-INTERNSHIP_17911224296ac25bfd12c31"
     description = (
-        "Software Developer Intern opportunity at TALENTBRAINY. "
-        "This is a 6-month full-time remote internship open across India, "
-        "with the cohort beginning on 1 November 2026. "
-        "There are 30 positions available. "
-        "Selected interns may receive academic credit (26 credits). "
+        "Business Development Intern at SKILL VEDANTH EDTECH SOLUTIONS PRIVATE LIMITED. "
+        "This is a 6-month full-time onsite internship in Bengaluru, Karnataka. "
+        "The internship starts on 15 November 2026. "
+        "There are 45 positions available and selected interns may receive 26 academic credits. "
+        "Monthly stipend is ₹18,000. Applications are open until 30 October 2026."
         "Applications are open until 25 October 2026."
     )
 

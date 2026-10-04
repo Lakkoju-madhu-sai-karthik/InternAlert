@@ -18,7 +18,9 @@ from telegram.ext import (
     MessageHandler,
     filters
 )
+
 from database import create_database
+
 
 # =========================
 # GLOBAL VARIABLES
@@ -69,14 +71,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
     ]
 
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
     await update.message.reply_text(
         "🎓 Welcome to InternAlert!\n\n"
         "Find internships and opportunities "
         "for students.\n\n"
         "Choose an option below:",
-        reply_markup=reply_markup
+        reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
 
@@ -104,7 +104,6 @@ async def show_latest_internships(query):
     """)
 
     internships = cursor.fetchall()
-
     connection.close()
 
     if not internships:
@@ -165,10 +164,7 @@ async def show_latest_internships(query):
 # SEARCH INTERNSHIPS
 # =========================
 
-async def search_internships(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE
-):
+async def search_internships(update, context):
 
     user_id = update.effective_user.id
 
@@ -218,7 +214,6 @@ async def search_internships(
     ))
 
     internships = cursor.fetchall()
-
     connection.close()
 
     if not internships:
@@ -273,11 +268,12 @@ async def search_internships(
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
+
 # =========================
 # CATEGORY SEARCH
 # =========================
 
-async def category_search(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def category_search(update, context):
 
     query = update.callback_query
     await query.answer()
@@ -329,13 +325,16 @@ async def category_search(update: Update, context: ContextTypes.DEFAULT_TYPE):
     connection.close()
 
     if not internships:
+
         await query.edit_message_text(
             f"🔎 No internships found for: {keyword}"
         )
+
         return
 
     await query.edit_message_text(
-        f"🔎 Found {len(internships)} internship(s) for: {keyword}"
+        f"🔎 Found {len(internships)} "
+        f"internship(s) for: {keyword}"
     )
 
     for internship in internships:
@@ -357,15 +356,25 @@ async def category_search(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         keyboard = [
-            [InlineKeyboardButton("🚀 Apply Now", url=apply_url)],
-            [InlineKeyboardButton("⭐ Save", callback_data=f"save_{internship_id}")]
+            [
+                InlineKeyboardButton(
+                    "🚀 Apply Now",
+                    url=apply_url
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "⭐ Save",
+                    callback_data=f"save_{internship_id}"
+                )
+            ]
         ]
 
         await query.message.reply_text(
             text,
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(keyboard)
-        )        
+        )
 
 
 # =========================
@@ -396,7 +405,6 @@ async def show_saved_internships(query):
     """, (user_id,))
 
     internships = cursor.fetchall()
-
     connection.close()
 
     if not internships:
@@ -459,10 +467,7 @@ async def show_saved_internships(query):
 # SAVE INTERNSHIP
 # =========================
 
-async def save_internship(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE
-):
+async def save_internship(update, context):
 
     query = update.callback_query
 
@@ -497,10 +502,7 @@ async def save_internship(
 # REMOVE SAVED INTERNSHIP
 # =========================
 
-async def remove_saved_internship(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE
-):
+async def remove_saved_internship(update, context):
 
     query = update.callback_query
 
@@ -534,22 +536,148 @@ async def remove_saved_internship(
 
 
 # =========================
+# PROFILE SETUP
+# =========================
+
+async def profile_setup_handler(update, context):
+
+    user_id = update.effective_user.id
+
+    if user_id not in profile_setup:
+        return False
+
+    text = update.message.text.strip()
+
+    step = profile_setup[user_id]["step"]
+
+    # NAME
+    if step == "name":
+
+        profile_setup[user_id]["name"] = text
+        profile_setup[user_id]["step"] = "degree"
+
+        await update.message.reply_text(
+            "🎓 Step 2 of 5\n\n"
+            "What is your degree?\n\n"
+            "Example: B.Tech CSE - Data Science"
+        )
+
+    # DEGREE
+    elif step == "degree":
+
+        profile_setup[user_id]["degree"] = text
+        profile_setup[user_id]["step"] = "skills"
+
+        await update.message.reply_text(
+            "💻 Step 3 of 5\n\n"
+            "What are your skills?\n\n"
+            "Example: Python, SQL, Excel, Power BI"
+        )
+
+    # SKILLS
+    elif step == "skills":
+
+        profile_setup[user_id]["skills"] = text
+        profile_setup[user_id]["step"] = "location"
+
+        await update.message.reply_text(
+            "📍 Step 4 of 5\n\n"
+            "What is your preferred internship location?\n\n"
+            "Example: Hyderabad, Bangalore, Remote"
+        )
+
+    # LOCATION
+    elif step == "location":
+
+        profile_setup[user_id]["location"] = text
+        profile_setup[user_id]["step"] = "remote"
+
+        await update.message.reply_text(
+            "🏠 Step 5 of 5\n\n"
+            "Do you prefer remote internships?\n\n"
+            "Reply with:\n"
+            "Yes or No"
+        )
+
+    # REMOTE
+    elif step == "remote":
+
+        profile_setup[user_id]["remote_preference"] = text
+
+        profile = profile_setup[user_id]
+
+        connection = sqlite3.connect(DATABASE_NAME)
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            INSERT OR REPLACE INTO users
+            (
+                user_id,
+                name,
+                degree,
+                skills,
+                location,
+                remote_preference
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            user_id,
+            profile["name"],
+            profile["degree"],
+            profile["skills"],
+            profile["location"],
+            profile["remote_preference"]
+        ))
+
+        connection.commit()
+        connection.close()
+
+        del profile_setup[user_id]
+
+        await update.message.reply_text(
+            "✅ Profile Created Successfully!\n\n"
+            f"👤 Name: {profile['name']}\n"
+            f"🎓 Degree: {profile['degree']}\n"
+            f"💻 Skills: {profile['skills']}\n"
+            f"📍 Location: {profile['location']}\n"
+            f"🏠 Remote: {profile['remote_preference']}"
+        )
+
+    return True
+
+
+# =========================
+# TEXT MESSAGE ROUTER
+# =========================
+
+async def text_message_handler(update, context):
+
+    user_id = update.effective_user.id
+
+    # Profile setup gets priority
+    if user_id in profile_setup:
+
+        await profile_setup_handler(update, context)
+        return
+
+    # Manual internship search
+    if user_id in waiting_for_search:
+
+        await search_internships(update, context)
+        return
+
+
+# =========================
 # BUTTON HANDLER
 # =========================
 
-async def button_handler(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE
-):
+async def button_handler(update, context):
 
     query = update.callback_query
 
     await query.answer()
 
-    # =========================
     # FIND
-    # =========================
-
     if query.data == "find":
 
         keyboard = [
@@ -599,26 +727,17 @@ async def button_handler(
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
-    # =========================
     # LATEST
-    # =========================
-
     elif query.data == "latest":
 
         await show_latest_internships(query)
 
-    # =========================
     # SAVED
-    # =========================
-
     elif query.data == "saved":
 
         await show_saved_internships(query)
 
-    # =========================
     # PROFILE
-    # =========================
-
     elif query.data == "profile":
 
         user_id = query.from_user.id
@@ -678,10 +797,7 @@ async def button_handler(
             parse_mode="Markdown"
         )
 
-    # =========================
     # CREATE PROFILE
-    # =========================
-
     elif query.data == "create_profile":
 
         user_id = query.from_user.id
@@ -696,10 +812,8 @@ async def button_handler(
             "👤 What is your name?",
             parse_mode="Markdown"
         )
-    # =========================
-    # MANUAL SEARCH
-    # =========================
 
+    # MANUAL SEARCH
     elif query.data == "search_other":
 
         user_id = query.from_user.id
@@ -717,23 +831,23 @@ async def button_handler(
             "• Data Analyst\n"
             "• Microsoft",
             parse_mode="Markdown"
-        )  
+        )
 
-    # =========================
     # ALERTS
-    # =========================
-
     elif query.data == "alerts":
 
         await query.edit_message_text(
             "🔔 My Alerts\n\n"
             "Your internship alerts will appear here."
         )
+
+
 # =========================
 # MAIN
 # =========================
 
 def main():
+
     create_database()
 
     if not TOKEN:
@@ -744,11 +858,7 @@ def main():
 
     app = Application.builder().token(TOKEN).build()
 
-
-    # =========================
     # /start
-    # =========================
-
     app.add_handler(
         CommandHandler(
             "start",
@@ -756,33 +866,23 @@ def main():
         )
     )
 
-
-    # =========================
-    # MAIN BUTTONS
-    # =========================
-
+    # Main buttons
     app.add_handler(
         CallbackQueryHandler(
             button_handler,
             pattern="^(find|latest|saved|profile|alerts|create_profile|search_other)$"
         )
     )
-     
 
-
-    # =========================
-    # SAVE BUTTON
-    # =========================
-    # =========================
-    # CATEGORY SEARCH BUTTONS
-    # =========================
-
+    # Category search
     app.add_handler(
         CallbackQueryHandler(
             category_search,
             pattern="^search_(python|data_science|sql|web|remote)$"
         )
     )
+
+    # Save
     app.add_handler(
         CallbackQueryHandler(
             save_internship,
@@ -790,11 +890,7 @@ def main():
         )
     )
 
-
-    # =========================
-    # REMOVE BUTTON
-    # =========================
-
+    # Remove
     app.add_handler(
         CallbackQueryHandler(
             remove_saved_internship,
@@ -802,18 +898,13 @@ def main():
         )
     )
 
-
-    # =========================
-    # NORMAL TEXT MESSAGES
-    # =========================
-
+    # Normal text
     app.add_handler(
         MessageHandler(
             filters.TEXT & ~filters.COMMAND,
-            search_internships
+            text_message_handler
         )
     )
-
 
     print("InternAlert is running...")
 

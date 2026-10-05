@@ -12,21 +12,20 @@ def add_internship():
     connection = sqlite3.connect(DATABASE_NAME)
     cursor = connection.cursor()
 
-    title = "Business Development Intern"
-    company = "SKILL VEDANTH EDTECH SOLUTIONS PRIVATE LIMITED"
-    location = "Bengaluru, Karnataka"
-    stipend = "₹18,000/month"
-    duration = "6 Months"
-    skills = "Business Development,Communication"
-    deadline = "30 Oct 2026"
-    apply_url = "https://internship.aicte-india.org/internships/1-INTERNSHIP_17911224296ac25bfd12c31"
+    title = "Python Internship"
+    company = "Learntricks Edutech"
+    location = "Work From Home"
+    stipend = "₹12,000 - ₹15,000/month"
+    duration = "2 Months"
+    skills = "Python, Django, HTML, CSS, JavaScript, React, Angular, jQuery, PHP, Node.js"
+    deadline = "17 Oct 2026"
+    apply_url = "https://unstop.com/internships/python-internship-unstop-tech-fair-2025-learntricks-edutech-1765719"
     description = (
-        "Business Development Intern at SKILL VEDANTH EDTECH SOLUTIONS PRIVATE LIMITED. "
-        "This is a 6-month full-time onsite internship in Bengaluru, Karnataka. "
-        "The internship starts on 15 November 2026. "
-        "There are 45 positions available and selected interns may receive 26 academic credits. "
-        "Monthly stipend is ₹18,000. Applications are open until 30 October 2026."
-        "Applications are open until 25 October 2026."
+        "Python Internship at Learntricks Edutech. "
+        "This is a 2-month part-time work-from-home internship with "
+        "5 working days per week. The stipend is ₹12,000 to ₹15,000 per month. "
+        "Interns may work with Python, Django, HTML, CSS, JavaScript and "
+        "other frontend/backend technologies. College-pursuing students can apply."
     )
 
     # Check if internship already exists
